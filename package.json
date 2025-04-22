@@ -1,5 +1,5 @@
 {
-  "name": "ass-3b",
+  "name": "ass-3c",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,8 +8,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "archiver": "^7.0.1"
-  }
+  "description": ""
 }

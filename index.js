@@ -1,64 +1,28 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const archiver = require('archiver');
 
-function backupFiles(sourceDir, backupDir) {
+function inspectEnvironment() {
     try {
-        if (!fs.existsSync(sourceDir)) {
-            console.log('Source directory does not exist.');
-            return;
+        const envDetails = {
+            homeDirectory: os.homedir(),
+            hostname: os.hostname(),
+            networkInterfaces: os.networkInterfaces(),
+            environmentVariables: process.env
+        };
+
+        const logsDir = path.join(__dirname, 'logs');
+        if (!fs.existsSync(logsDir)) {
+            fs.mkdirSync(logsDir, { recursive: true });
         }
 
-        if (!fs.existsSync(backupDir)) {
-            fs.mkdirSync(backupDir, { recursive: true });
-        }
+        const filePath = path.join(logsDir, 'env-details.json');
+        fs.writeFileSync(filePath, JSON.stringify(envDetails, null, 2));
 
-        const files = fs.readdirSync(sourceDir);
-        let logData = '';
-
-        files.forEach(file => {
-            const sourcePath = path.join(sourceDir, file);
-            const backupPath = path.join(backupDir, file);
-
-            if (fs.lstatSync(sourcePath).isFile()) {
-                fs.copyFileSync(sourcePath, backupPath);
-                const stats = fs.statSync(backupPath);
-                logData += `Copied: ${file} | Size: ${stats.size} bytes | Timestamp: ${new Date().toISOString()}\n`;
-                console.log(`Backed up: ${file}`);
-            }
-        });
-
-        fs.writeFileSync(path.join(backupDir, 'backup-log.txt'), logData);
-        console.log('Backup completed successfully.');
+        console.log('Environment details saved successfully in env-details.json');
     } catch (error) {
-        console.error('Error during backup:', error.message);
+        console.error('Error while inspecting environment:', error.message);
     }
 }
 
-function zipBackup(backupDir) {
-    try {
-        const zipPath = `${backupDir}.zip`;
-        const output = fs.createWriteStream(zipPath);
-        const archive = archiver('zip', { zlib: { level: 9 } });
-
-        output.on('close', () => {
-            console.log(`Backup compressed into ${zipPath} (${archive.pointer()} bytes)`);
-        });
-
-        archive.on('error', (err) => {
-            throw err;
-        });
-
-        archive.pipe(output);
-        archive.directory(backupDir, false);
-        archive.finalize();
-    } catch (error) {
-        console.error('Error during compression:', error.message);
-    }
-}
-
-const sourceFolder = process.argv[2];
-const backupFolder = 'backup';
-
-backupFiles(sourceFolder, backupFolder);
-zipBackup(backupFolder);
+inspectEnvironment();
